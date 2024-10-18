@@ -121,9 +121,10 @@ function App() {
               <td>{student.code}</td>
               <td>
                 <Button
-                  style={{opacity: 0.6,
+                  style={{
                     backgroundColor:
-                      student.status === "In-active" ? "success" : "danger",
+                      student.status === "In-active" ? "green" : "red",
+                      opacity: 0.5
                   }} // Chỉ áp dụng opacity cho màu nền
                   className="text-white"             
                 >
