@@ -21,7 +21,7 @@ function App() {
   const [studentCode, setStudentCode] = useState("");
   const [isActive, setIsActive] = useState(false);
 
-  // Q6: Add student to the top of the list
+ 
   const handleAddStudent = () => {
     const newStudent = {
       id: students.length + 1,
@@ -35,7 +35,7 @@ function App() {
     setIsActive(false);
   };
 
-  // Q7: Delete a student
+
   const handleDeleteStudent = (id) => {
     setStudents(students.filter((student) => student.id !== id));
     setSelectedStudents(
@@ -43,7 +43,7 @@ function App() {
     );
   };
 
-  // Q8: Update selected students count
+ 
   const handleSelectStudent = (id) => {
     if (selectedStudents.includes(id)) {
       setSelectedStudents(
@@ -54,7 +54,7 @@ function App() {
     }
   };
 
-  // Q9: Clear all students
+
   const handleClearAll = () => {
     setStudents([]);
     setSelectedStudents([]);
