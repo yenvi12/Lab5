@@ -1,6 +1,6 @@
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Form,
   Button,
@@ -10,40 +10,66 @@ import {
   Container,
   FormControl,
 } from "react-bootstrap";
+import axios from "axios";
 
 function App() {
-  const [students, setStudents] = useState([
-    { id: 1, name: "Nguyen Van A", code: "CODE12345", status: "Active" },
-    { id: 2, name: "Tran Van B", code: "CODE67890", status: "In-active" },
-  ]);
+  const [students, setStudents] = useState([]);
+  const [student, setStudent] = useState({
+    name: '',
+    studentCode: '',
+    isActive: false,
+  });
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setStudent({
+      ...student,
+      [name]: type === 'checkbox' ? checked : value,
+    });
+  };
+
+  useEffect(() => {
+    axios.get('https://student-api-nestjs.onrender.com/students')
+      .then((response) => {
+        setStudents(response.data.data);
+      })
+      .catch((error) => {
+        console.error('Error fetching student list:', error);
+      });
+  }, []);
+
   const [selectedStudents, setSelectedStudents] = useState([]);
-  const [studentName, setStudentName] = useState("");
+  const [name, setStudentName] = useState("");
   const [studentCode, setStudentCode] = useState("");
   const [isActive, setIsActive] = useState(false);
 
- 
-  const handleAddStudent = () => {
-    const newStudent = {
-      id: students.length + 1,
-      name: studentName,
-      code: studentCode,
-      status: isActive ? "Active" : "In-active",
-    };
-    setStudents([newStudent, ...students]); // Add to the top of the list
-    setStudentName("");
-    setStudentCode("");
-    setIsActive(false);
-  };
+  const handleAddStudent = (e) => {
+    e.preventDefault();
+   console.log(student);
+    // API call to add new student
+    axios.post('https://student-api-nestjs.onrender.com/students', student)
+    .then((response) => {
+      setStudents([...students, response.data.data]); // Cập nhật danh sách sinh viên
+      setStudent({ name: '', studentCode: '', isActive: false }); // Reset form
+    })
+    .catch((error) => {
+      console.error('Error adding student:', error);
+    });
 
+  };
 
   const handleDeleteStudent = (id) => {
-    setStudents(students.filter((student) => student.id !== id));
-    setSelectedStudents(
-      selectedStudents.filter((studentId) => studentId !== id)
-    );
+    axios.delete(`https://student-api-nestjs.onrender.com/students/${id}`)
+      .then(() => {
+        setStudents(students.filter((student) => student._id !== id));
+        setSelectedStudents(selectedStudents.filter((studentId) => studentId !== id));
+        console.log("Student deleted successfully.");
+      })
+      .catch((error) => {
+        console.error("Error deleting student:", error);
+      });
   };
 
- 
   const handleSelectStudent = (id) => {
     if (selectedStudents.includes(id)) {
       setSelectedStudents(
@@ -54,7 +80,6 @@ function App() {
     }
   };
 
-
   const handleClearAll = () => {
     setStudents([]);
     setSelectedStudents([]);
@@ -64,38 +89,47 @@ function App() {
     <Container className="mt-5">
       <Row>
         <Col>
-          <h2>Total Selected Student: {selectedStudents.length} </h2>
+          <h2>Total Selected Student: {selectedStudents.length}</h2>
         </Col>
         <Col>
           <Button onClick={handleClearAll}>Clear</Button>
         </Col>
       </Row>
 
+      <Form onSubmit={handleAddStudent} className="student-form">
       <Row className="mt-5">
         <Col>
           <FormControl
+            type="text"
             className="mb-2"
-            placeholder="Student Name"
-            value={studentName}
-            onChange={(e) => setStudentName(e.target.value)}
-          ></FormControl>
+            placeholder="Full Name"
+            name="name"
+            value={student.name}
+            onChange={handleChange}
+            required
+          />
           <FormControl
+            type="text"
             placeholder="Student Code"
-            value={studentCode}
-            onChange={(e) => setStudentCode(e.target.value)}
-          ></FormControl>
+            name="studentCode"
+            value={student.studentCode}
+            onChange={handleChange}
+            required
+          />
           <Form.Check
             className="mt-2"
             type="checkbox"
-            label={"Still Active"}
-            checked={isActive}
-            onChange={(e) => setIsActive(e.target.checked)}
-          ></Form.Check>
+            label={"Active"}
+            name="isActive"
+            checked={student.isActive}
+            onChange={handleChange}
+          />
         </Col>
         <Col>
-          <Button onClick={handleAddStudent}>Add</Button>
+          <Button type="submit">Add Student</Button>
         </Col>
       </Row>
+    </Form>
 
       <Table striped bordered hover>
         <thead>
@@ -109,32 +143,31 @@ function App() {
         </thead>
         <tbody>
           {students.map((student) => (
-            <tr key={student.id}>
+            <tr key={student._id}>
               <td>
                 <Form.Check
                   type="checkbox"
-                  checked={selectedStudents.includes(student.id)}
-                  onChange={() => handleSelectStudent(student.id)}
-                ></Form.Check>
+                  checked={selectedStudents.includes(student._id)}
+                  onChange={() => handleSelectStudent(student._id)}
+                />
               </td>
               <td>{student.name}</td>
-              <td>{student.code}</td>
+              <td>{student.studentCode}</td>
               <td>
                 <Button
                   style={{
-                    backgroundColor:
-                      student.status === "In-active" ? "green" : "red",
-                      opacity: 0.5
-                  }} // Chỉ áp dụng opacity cho màu nền
-                  className="text-white"             
+                    backgroundColor: student.isActive ? "green" : "red",
+                    opacity: 0.5
+                  }}
+                  className="text-white"
                 >
-                  {student.status}
+                  {student.isActive ? "Active" : "In-active"}
                 </Button>
               </td>
               <td>
                 <Button
                   variant="danger"
-                  onClick={() => handleDeleteStudent(student.id)}
+                  onClick={() => handleDeleteStudent(student._id)}
                 >
                   Delete
                 </Button>
